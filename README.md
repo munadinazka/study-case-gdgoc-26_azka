@@ -2,7 +2,7 @@
 
 FilmLog adalah aplikasi berbasis web untuk mengelola daftar film yang ingin ditonton (*watchlist*), mencatat film yang sudah ditonton, memberikan rating dan ulasan, serta mendapatkan rekomendasi film menggunakan Google Gemini AI.
 
-Proyek ini dikembangkan sebagai bagian dari **Backend Recruitment Task GDGoC UGM 2026/2027**.
+Proyek ini dikembangkan sebagai bagian dari **Hacker Backend Assignment Specification Recruitment GDGoC UGM 2026/2027**.
 
 ## Fitur Utama
 
