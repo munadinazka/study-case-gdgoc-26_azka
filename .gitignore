@@ -1,5 +1,30 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Node.js
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system
 .DS_Store
 Thumbs.db
+
+# Log files
 *.log
-.env
-.env.local

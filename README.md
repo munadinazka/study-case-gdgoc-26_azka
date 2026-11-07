@@ -1,85 +1,250 @@
-# FilmLog — GDGoC Backend Recruitment Task Starter Pack
+# FilmLog — Movie Watchlist & Review Platform
 
-Selamat datang di repositori penugasan backend **FilmLog (Movie Watchlist & Review Platform)**. Repositori ini menyediakan:
-1. **Initial Seed Database** (`data/movies.json` dan `data/seed.sql`) berisi 20 film kurasi awal dengan atribut lengkap.
-2. **Frontend Companion** (`frontend/`) bertema Letterboxd yang siap pakai untuk menguji endpoint backend Anda secara visual dan interaktif.
+FilmLog adalah aplikasi berbasis web untuk mengelola daftar film yang ingin ditonton (*watchlist*), mencatat film yang sudah ditonton, memberikan rating dan ulasan, serta mendapatkan rekomendasi film menggunakan Google Gemini AI.
 
----
+Proyek ini dikembangkan sebagai bagian dari **Backend Recruitment Task GDGoC UGM 2026/2027**.
 
-## 🎯 Objektif Penugasan
-Rancang dan bangun layanan **RESTful API** untuk aplikasi pelacak film (*movie watchlist*) yang mendukung alur autentikasi, kurasi film, pencatatan tontonan dan ulasan, serta integrasi **Google Gemini LLM** untuk rekomendasi film berbasis data lokal.
+## Fitur Utama
 
-Bebas menggunakan bahasa pemrograman dan framework apa pun (Node.js/Express/NestJS, Go/Gin/Fiber, Python/FastAPI/Django, PHP/Laravel, Java/Spring Boot, dll.) serta database relasional (PostgreSQL, MySQL, SQLite) atau NoSQL.
+- **Autentikasi pengguna:** Registrasi dan login menggunakan JWT.
+- **Daftar film:** Menampilkan seluruh film dan detail informasi setiap film.
+- **Watchlist:** Menambahkan, melihat, dan menghapus film dari daftar film yang ingin ditonton.
+- **Watched & Reviews:** Mencatat film yang sudah ditonton, memberikan rating 1–5, dan menulis ulasan.
+- **Rekomendasi AI:** Mendapatkan rekomendasi film berdasarkan preferensi pengguna menggunakan Google Gemini.
+- **Validasi dan penanganan error:** Memvalidasi input serta menangani berbagai kondisi error API.
 
----
+## Teknologi yang Digunakan
 
-## 📁 Struktur Repositori Starter
+### Backend
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- PyJWT
+- pwdlib (Argon2)
+- Google Gemini API
+
+### Frontend
+- HTML
+- CSS
+- JavaScript
+- Tailwind CSS
+
+### Pengujian
+- Pytest
+- HTTPX
+
+## Struktur Proyek
 
 ```text
-movie-watchlist-starter/
+study-case-gdgoc-26_azka/
+├── backend/
+│   ├── app/
+│   │   ├── core/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routers/
+│   │   ├── schemas/
+│   │   └── services/
+│   ├── tests/
+│   ├── .env.example
+│   ├── main.py
+│   └── requirements.txt
 ├── data/
-│   ├── movies.json     # Data 20 film awal (format JSON) untuk database seeder
-│   └── seed.sql        # Skrip SQL INSERT kompatibel dengan PostgreSQL & MySQL
+│   ├── movies.json
+│   └── seed.sql
 ├── frontend/
-│   ├── index.html      # Frontend Letterboxd-style SPA (Zero-build Tailwind)
-│   ├── app.js          # Client logic & API caller
-│   └── README.md       # Panduan menjalankan frontend
-└── README.md           # Panduan penugasan & spesifikasi API
+│   ├── app.js
+│   ├── index.html
+│   ├── style.css
+│   └── README.md
+├── .gitignore
+└── README.md
 ```
 
+## Database
+
+FilmLog menggunakan PostgreSQL sebagai database relasional.
+
+Database terdiri atas delapan tabel:
+
+| Tabel | Fungsi |
+|---|---|
+| `users` | Menyimpan informasi akun pengguna |
+| `movies` | Menyimpan informasi film |
+| `genres` | Menyimpan kategori genre film |
+| `movie_genre` | Menghubungkan film dengan genre |
+| `people` | Menyimpan informasi orang yang terlibat dalam film |
+| `movie_people` | Menghubungkan film dengan pemeran dan sutradara |
+| `watchlists` | Menyimpan daftar film yang ingin ditonton |
+| `user_ratings` | Menyimpan rating dan ulasan pengguna |
+
+Data awal film disediakan melalui direktori `data/`.
+
+## Persiapan dan Instalasi
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/munadinazka/study-case-gdgoc-26_azka.git
+cd study-case-gdgoc-26_azka
+```
+
+### 2. Persiapan Database
+
+Pastikan PostgreSQL sudah berjalan.
+
+Buat database sesuai konfigurasi yang akan digunakan pada file `.env`, kemudian jalankan SQL schema dan seed data yang tersedia di direktori `data/`.
+
+### 3. Persiapan Backend
+
+Masuk ke direktori backend:
+
+```bash
+cd backend
+```
+
+Buat virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Aktifkan virtual environment di Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Instal dependensi:
+
+```bash
+pip install -r requirements.txt
+```
+
+Buat file `.env` berdasarkan `.env.example`, kemudian sesuaikan konfigurasi database dan API key milik masing-masing pengguna.
+
+Jangan membagikan file `.env` karena berisi informasi rahasia.
+
+### 4. Menjalankan Backend
+
+Dari direktori `backend`, jalankan:
+
+```bash
+uvicorn main:app --reload
+```
+
+Backend berjalan pada:
+
+```text
+http://localhost:8000
+```
+
+Dokumentasi API Swagger tersedia di:
+
+```text
+http://localhost:8000/docs
+```
+
+### 5. Menjalankan Frontend
+
+Buka terminal baru, kemudian masuk ke direktori frontend:
+
+```bash
+cd frontend
+```
+
+Jalankan server lokal:
+
+```bash
+python -m http.server 3000
+```
+
+Buka aplikasi melalui:
+
+```text
+http://localhost:3000
+```
+
+Pastikan backend dan frontend berjalan bersamaan agar aplikasi dapat berkomunikasi dengan API.
+
+## Dokumentasi API
+
+Seluruh endpoint API menggunakan prefix `/api`.
+
+### Authentication
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| POST | `/api/auth/register` | Registrasi pengguna |
+| POST | `/api/auth/login` | Login pengguna dan memperoleh JWT |
+
+### Movies
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/api/movies` | Menampilkan daftar film |
+| GET | `/api/movies/{movie_id}` | Menampilkan detail film |
+| POST | `/api/movies/recommend` | Meminta rekomendasi film dari Gemini AI |
+
+### Watchlist
+
+Endpoint berikut memerlukan autentikasi JWT.
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/api/watchlist` | Melihat watchlist pengguna |
+| POST | `/api/watchlist` | Menambahkan film ke watchlist |
+| DELETE | `/api/watchlist/{movie_id}` | Menghapus film dari watchlist |
+
+### Watched & Reviews
+
+Endpoint berikut memerlukan autentikasi JWT.
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/api/watched` | Melihat film yang sudah ditonton |
+| POST | `/api/watched` | Menambahkan film yang sudah ditonton beserta rating dan ulasan |
+
+## Keamanan dan Validasi
+
+Beberapa mekanisme keamanan yang diterapkan:
+
+- Password pengguna disimpan dalam bentuk hash menggunakan Argon2.
+- Autentikasi menggunakan JSON Web Token (JWT).
+- Endpoint watchlist dan watched dilindungi autentikasi.
+- Rating dibatasi pada rentang 1–5.
+- Input ulasan divalidasi agar tidak kosong.
+- Duplikasi film pada watchlist dan catatan film yang sudah ditonton ditangani melalui validasi dan constraint database.
+- File `.env` tidak disertakan dalam repository.
+
+## Integrasi Google Gemini AI
+
+FilmLog menggunakan Google Gemini API untuk menghasilkan rekomendasi film.
+
+Rekomendasi tidak langsung diterima sebagai data film baru. Backend menyediakan katalog film dari database kepada layanan AI, kemudian memvalidasi hasil rekomendasi agar film yang dikembalikan benar-benar tersedia dalam database lokal.
+
+Dengan demikian, rekomendasi AI tetap mengacu pada koleksi film yang dimiliki aplikasi.
+
+## Pengujian
+
+Pengujian backend menggunakan Pytest.
+
+Jalankan seluruh pengujian dari direktori `backend`:
+
+```bash
+python -m pytest -q
+```
+
+Pengujian mencakup autentikasi, daftar film, watchlist, watched, validasi input, autentikasi endpoint terlindungi, serta integrasi rekomendasi AI.
+
+## Dokumentasi Tambahan
+
+- Dokumentasi API: `http://localhost:8000/docs`
+- Panduan frontend: `frontend/README.md`
+
 ---
 
-## 📑 Spesifikasi Kontrak API (API Contract)
+**FilmLog — Movie Watchlist & Review Platform**
 
-Agar sistem dapat terhubung secara lancar dengan frontend companion yang disediakan, pastikan API Anda mematuhi spesifikasi antarmuka (API Contract) berikut:
-
-### 1. Autentikasi
-* `POST /api/auth/register`
-  * **Body:** `{ "username": "string", "email": "string", "password": "string" }`
-  * **Response:** Status `201 Created`
-* `POST /api/auth/login`
-  * **Body:** `{ "email": "string", "password": "string" }`
-  * **Response:** Status `200 OK`, JSON berisi `{ "token": "JWT_STRING", "user": { ... } }`
-
-### 2. Movies
-* `GET /api/movies`
-  * **Query Params (Opsional):** `?genre=Sci-Fi&search=Inception`
-  * **Response:** Status `200 OK`, array daftar film dari database.
-* `GET /api/movies/:id`
-  * **Response:** Status `200 OK`, detail lengkap satu film.
-
-### 3. Watchlist (Protected - Membutuhkan `Authorization: Bearer <token>`)
-* `GET /api/watchlist`
-  * **Response:** Status `200 OK`, daftar film di watchlist user yang sedang login.
-* `POST /api/watchlist`
-  * **Body:** `{ "movieId": 1 }`
-  * **Response:** Status `201 Created`
-* `DELETE /api/watchlist/:movieId`
-  * **Response:** Status `200 OK` (atau `204 No Content`)
-
-### 4. Watched & Review (Protected - Membutuhkan `Authorization: Bearer <token>`)
-* `GET /api/watched`
-  * **Response:** Status `200 OK`, riwayat film yang sudah ditonton oleh user beserta ulasan dan ratingnya.
-* `POST /api/watched`
-  * **Body:** `{ "movieId": 1, "rating": 5, "review": "Filmnya luar biasa..." }`
-  * **Response:** Status `201 Created`.
-
-### 5. AI Recommendation (Gemini API Integration ⭐)
-* `POST /api/movies/recommend`
-  * **Body:** `{ "prompt": "Saya mau film misteri dengan alur lambat dan atmosfer mendalam" }`
-  * **Aturan Khusus:** Film yang direkomendasikan **harus berasal dari 20 film di database awal**.
-  * **Response:** Status `200 OK` dengan JSON terstruktur:
-    ```json
-    {
-      "movie_id": 14,
-      "reasoning": "Memento sangat cocok dengan preferensi misteri Anda karena..."
-    }
-    ```
-
----
-
-## 💡 Prinsip Backend yang Dinilai
-1. **Database Modeling:** Relasi yang rapi antar tabel (`users`, `movies`, `watchlists`, `reviews`).
-2. **Access Control & Security:** Password di-hash (bcrypt/argon2), rute privat terlindungi token JWT, user tidak dapat memodifikasi data user lain.
-3. **Data Integrity & Robustness:** Validasi input request, penanganan error yang baik, dan penggunaan status code HTTP yang semantik.
-4. **Structured LLM Prompting:** Kemampuan mengarahkan Gemini untuk memilih dari subset data lokal dan mengembalikan JSON terstruktur.
+Dikembangkan untuk Hacker Backend Assignment Specification Recruitment GDGoC UGM 2026/2027.

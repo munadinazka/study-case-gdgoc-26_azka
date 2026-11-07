@@ -196,6 +196,37 @@ function switchTab(tabId) {
 // ==========================================
 // 5. MOVIES (DISCOVER)
 // ==========================================
+function normalizeMovie(movie) {
+  const rawGenres = movie.genres;
+  const genres = Array.isArray(rawGenres)
+    ? rawGenres
+        .map(g => typeof g === 'string' ? g : g?.genre_name)
+        .filter(Boolean)
+    : typeof rawGenres === 'string'
+      ? rawGenres.split(',').map(g => g.trim()).filter(Boolean)
+      : [];
+
+  const rawCast = movie.cast ?? movie.cast_members;
+  const cast = Array.isArray(rawCast)
+    ? rawCast
+        .map(c => typeof c === 'string' ? c : c?.person_name)
+        .filter(Boolean)
+    : typeof rawCast === 'string'
+      ? rawCast.split(',').map(c => c.trim()).filter(Boolean)
+      : [];
+
+  return {
+    ...movie,
+    id: movie.id ?? movie.movie_id,
+    year: movie.year ?? movie.release_year,
+    duration: movie.duration ?? movie.duration_minutes,
+    rating: movie.rating ?? movie.average_rating,
+    director: movie.director ?? movie.director_name,
+    genres,
+    cast
+  };
+}
+
 async function loadDiscoverMovies(shuffle = false) {
   const statusEl = document.getElementById('movie-grid-status');
   const gridEl = document.getElementById('movie-grid');
@@ -205,7 +236,8 @@ async function loadDiscoverMovies(shuffle = false) {
     // Try fetching from applicant's backend: GET /api/movies
     const data = await apiFetch('/movies');
     // Normalize response: could be array or { data: [...] }
-    state.allMovies = Array.isArray(data) ? data : (data.data || data.movies || []);
+    const movies = Array.isArray(data) ? data : (data.data || data.movies || []);
+    state.allMovies = movies.map(normalizeMovie);
     
     if (shuffle) {
       state.allMovies.sort(() => Math.random() - 0.5);
@@ -223,7 +255,8 @@ async function loadDiscoverMovies(shuffle = false) {
     console.warn('Backend not reachable, loading fallback local seed:', err.message);
     try {
       const fallbackRes = await fetch('../data/movies.json');
-      state.allMovies = await fallbackRes.json();
+      const fallbackMovies = await fallbackRes.json();
+      state.allMovies = fallbackMovies.map(normalizeMovie);
       if (shuffle) state.allMovies.sort(() => Math.random() - 0.5);
       applyMovieFilters();
       showToast('⚠️ Backend belum aktif. Menampilkan data lokal (fallback). Pastikan server backend Anda berjalan di ' + state.apiBaseUrl, 'warning');
@@ -257,14 +290,25 @@ function filterByGenre(genre) {
 
 function applyMovieFilters() {
   state.filteredMovies = state.allMovies.filter(movie => {
-    const matchesSearch = !state.searchQuery || 
+    const matchesSearch = !state.searchQuery ||
       movie.title.toLowerCase().includes(state.searchQuery) ||
       (movie.director && movie.director.toLowerCase().includes(state.searchQuery));
 
-    let movieGenres = Array.isArray(movie.genres) ? movie.genres : (movie.genres ? movie.genres.split(',') : []);
-    movieGenres = movieGenres.map(g => g.trim());
+    const rawGenres = movie.genres;
 
-    const matchesGenre = state.selectedGenre === 'ALL' || movieGenres.includes(state.selectedGenre);
+    let movieGenres = Array.isArray(rawGenres)
+      ? rawGenres.map(g => {
+          if (typeof g === 'object' && g !== null) {
+            return String(g.genre_name ?? '').trim();
+          }
+          return String(g ?? '').trim();
+        }).filter(Boolean)
+      : typeof rawGenres === 'string'
+        ? rawGenres.split(',').map(g => String(g).trim()).filter(Boolean)
+        : [];
+
+    const matchesGenre = state.selectedGenre === 'ALL' ||
+      movieGenres.includes(state.selectedGenre);
 
     return matchesSearch && matchesGenre;
   });
@@ -346,7 +390,9 @@ async function openMovieDetail(movieId) {
   // If detail isn't full, try calling backend: GET /api/movies/:id
   try {
     const remoteMovie = await apiFetch(`/movies/${movieId}`);
-    if (remoteMovie) movie = remoteMovie.data || remoteMovie;
+    if (remoteMovie) {
+      movie = normalizeMovie(remoteMovie.data || remoteMovie);
+    }
   } catch (err) {
     // If endpoint not ready, fall back to existing movie in state
   }
@@ -436,7 +482,23 @@ async function loadWatchlist() {
 
   try {
     const data = await apiFetch('/watchlist');
-    state.watchlist = Array.isArray(data) ? data : (data.data || data.watchlist || []);
+
+    const items = Array.isArray(data)
+      ? data
+      : (data.watchlists || data.data || data.watchlist || []);
+
+    state.watchlist = items.map(item => {
+      const movie = item.movie || item;
+
+      return {
+        ...movie,
+        id: movie.id ?? movie.movie_id ?? item.movie_id,
+        movie_id: movie.movie_id ?? item.movie_id,
+        year: movie.year ?? movie.release_year,
+        duration: movie.duration ?? movie.duration_minutes,
+        rating: movie.rating ?? movie.average_rating
+      };
+    });
     
     // Update badge count
     const badge = document.getElementById('watchlist-badge');
@@ -473,17 +535,17 @@ async function toggleWatchlist(movieId) {
       showToast('Film dihapus dari watchlist', 'info');
     } else {
       // POST /api/watchlist
-      const res = await apiFetch('/watchlist', {
+      await apiFetch('/watchlist', {
         method: 'POST',
         body: JSON.stringify({ movieId: movieId, movie_id: movieId })
       });
-      state.watchlist.push(res.data || { movieId });
+
       showToast('Berhasil ditambahkan ke watchlist! 📌', 'success');
     }
 
     // Refresh UI
     applyMovieFilters();
-    loadWatchlist();
+    await loadWatchlist();
     if (state.activeDetailMovie && String(state.activeDetailMovie.id) === String(movieId)) {
       openMovieDetail(movieId);
     }
@@ -546,17 +608,40 @@ function renderWatchlistGrid() {
 // ==========================================
 // 8. WATCHED & REVIEWS
 // ==========================================
+
 async function loadWatchedList() {
   if (!state.token) return;
 
   try {
     const data = await apiFetch('/watched');
-    state.watchedList = Array.isArray(data) ? data : (data.data || data.watched || []);
+
+    const ratings = Array.isArray(data)
+      ? data
+      : (data.ratings || data.data || data.watched || []);
+
+    state.watchedList = ratings.map(item => ({
+      ...item,
+
+      // Samakan nama properti dengan yang dibaca frontend
+      rating: item.rating ?? item.rating_score,
+      review: item.review ?? item.review_text,
+
+      // Samakan struktur data film
+      movie: item.movie
+        ? {
+            ...item.movie,
+            id: item.movie.id ?? item.movie.movie_id,
+            year: item.movie.year ?? item.movie.release_year
+          }
+        : null
+    }));
+
     renderWatchedList();
   } catch (err) {
     console.error('Failed to load watched list:', err.message);
   }
 }
+
 
 function openWatchedModal(movieId) {
   if (!state.token) {
