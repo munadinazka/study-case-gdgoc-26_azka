@@ -45,9 +45,14 @@ study-case-gdgoc-26_azka/
 │   │   ├── models/
 │   │   ├── routers/
 │   │   ├── schemas/
-│   │   └── services/
+│   │   ├── services/
+│   │   ├── __init__.py
+│   │   └── database.py
 │   ├── tests/
 │   ├── .env.example
+│   ├── .gitignore
+│   ├── check_database.py
+│   ├── check_security.py
 │   ├── main.py
 │   └── requirements.txt
 ├── data/
